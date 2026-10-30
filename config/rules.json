@@ -1,0 +1,28 @@
+{
+    "risk_thresholds": {
+        "ship_as_is": 25,
+        "nudge_prepaid": 45,
+        "confirm_whatsapp": 70,
+        "hold_review": 100
+    },
+    "high_risk_cities": {
+        "Gorakhpur": 20,
+        "Bareilly": 18,
+        "Darbhanga": 18,
+        "Madhubani": 20
+    },
+    "business_rules": {
+        "prepaid_discount_percent": 3,
+        "confirmation_timeout_hours": 24,
+        "minimum_pincode_orders": 20
+    },
+    "financials": {
+        "forward_shipping_cost": 65,
+        "return_shipping_cost": 65,
+        "packaging_handling_cost": 25,
+        "damaged_return_rate": 0.08,
+        "average_product_cost": 180,
+        "cod_rto_rate": 0.28,
+        "prepaid_rto_rate": 0.04
+    }
+}

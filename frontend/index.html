@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CODGuard AI | Order Intelligence</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="/dashboard.js" defer></script>
+</head>
+
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="brand">
+                <span class="brand-mark" aria-hidden="true">CG</span>
+                <div>
+                    <h1>CODGuard<span> AI</span></h1>
+                    <p>ORDER INTELLIGENCE</p>
+                </div>
+            </div>
+
+            <p class="nav-caption">WORKSPACE</p>
+
+            <nav aria-label="Main navigation">
+                <a href="#overview" class="nav-link active" data-page="overview">Overview</a>
+                <a href="#orders" class="nav-link" data-page="orders">Orders</a>
+                <a href="#risk" class="nav-link" data-page="risk">Risk Intelligence</a>
+                <a href="#whatsapp" class="nav-link" data-page="whatsapp">WhatsApp Simulator</a>
+                <a href="#financials" class="nav-link" data-page="financials">Financials</a>
+            </nav>
+
+            <div class="sidebar-note">
+                <strong>Historical replay</strong>
+                <p>Rule-based scoring. No live orders or customer messages.</p>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">COD RISK WORKSPACE</p>
+                    <h2 id="page-title">Overview</h2>
+                    <p class="muted">Historical dataset • All completed orders</p>
+                </div>
+
+                <button id="refresh-button" class="secondary">Refresh data</button>
+            </header>
+
+            <p id="app-message" class="notice" role="status" hidden></p>
+
+            <section id="overview" class="page active">
+                <div class="metrics">
+                    <article class="card">
+                        <p>Total COD orders</p>
+                        <h3 id="total-orders">—</h3>
+                    </article>
+
+                    <article class="card">
+                        <p>Ship as-is</p>
+                        <h3 id="ship-as-is">—</h3>
+                    </article>
+
+                    <article class="card">
+                        <p>WhatsApp confirmation</p>
+                        <h3 id="confirm-whatsapp">—</h3>
+                    </article>
+
+                    <article class="card">
+                        <p>Prepaid nudges</p>
+                        <h3 id="prepaid-nudges">—</h3>
+                    </article>
+
+                    <article class="card danger">
+                        <p>Hold / review</p>
+                        <h3 id="hold-review">—</h3>
+                    </article>
+                </div>
+
+                <div class="two-column">
+                    <article class="panel">
+                        <h3>Recommended decisions</h3>
+                        <p class="muted">
+                            Current rules replayed on historical orders.
+                        </p>
+
+                        <div id="decision-bars" class="bars"></div>
+                    </article>
+
+                    <article class="panel">
+                        <h3>Historical delivery outcomes</h3>
+
+                        <div class="metrics compact">
+                            <div>
+                                <p class="muted">Delivered</p>
+                                <h3 id="delivered-count">—</h3>
+                            </div>
+
+                            <div>
+                                <p class="muted">Returned</p>
+                                <h3 id="returned-count">—</h3>
+                            </div>
+
+                            <div>
+                                <p class="muted">RTO rate</p>
+                                <h3 id="historical-rate">—</h3>
+                            </div>
+                        </div>
+
+                        <p class="notice">
+                            Risk scores are rule points, not RTO probabilities.
+                            Held orders go to review — they are not cancelled automatically.
+                        </p>
+                    </article>
+                </div>
+
+                <section class="panel">
+                    <h3>Analyze a new COD order</h3>
+                    <p class="muted">
+                        Test an order without saving it or contacting a customer.
+                    </p>
+
+                    <form id="analyze-form">
+                        <div class="form-grid">
+                            <label>
+                                Customer name
+                                <input id="customer-name" required placeholder="Priya Sharma">
+                            </label>
+
+                            <label>
+                                Phone
+                                <input id="phone" type="tel" required placeholder="9876543210">
+                            </label>
+
+                            <label>
+                                City
+                                <input id="city" required placeholder="Mumbai">
+                            </label>
+
+                            <label>
+                                Order value (₹)
+                                <input id="order-value" type="number" min="1" step="0.01" required>
+                            </label>
+
+                            <label>
+                                Previous orders
+                                <input id="prior-orders" type="number" min="0" step="1" value="0" required>
+                            </label>
+
+                            <label>
+                                Previous RTOs
+                                <input id="prior-rto" type="number" min="0" step="1" value="0" required>
+                            </label>
+                        </div>
+
+                        <label>
+                            Delivery address
+                            <textarea id="address" required
+                                placeholder="House, street, locality and landmarks"></textarea>
+                        </label>
+
+                        <button id="analyze-button" type="submit">Analyze Order →</button>
+                    </form>
+
+                    <div id="analysis-result" class="result hidden" aria-live="polite">
+                        <h4 id="result-action"></h4>
+                        <p id="result-risk"></p>
+                        <ul id="result-reasons"></ul>
+                    </div>
+                </section>
+            </section>
+
+            <section id="orders" class="page">
+                <section class="panel">
+                    <h3>Historical order decisions</h3>
+                    <p class="muted">
+                        Newest first. Recommendations are replayed, not actual interventions.
+                    </p>
+
+                    <div class="toolbar">
+                        <input id="order-search" aria-label="Search orders"
+                            placeholder="Search order ID, customer or city">
+
+                        <select id="action-filter" aria-label="Filter by action">
+                            <option value="">All decisions</option>
+                            <option value="SHIP_AS_IS">Ship as-is</option>
+                            <option value="CONFIRM_ON_WHATSAPP">WhatsApp confirmation</option>
+                            <option value="NUDGE_PREPAID">Prepaid nudge</option>
+                            <option value="HOLD_REVIEW">Hold / review</option>
+                        </select>
+                    </div>
+
+                    <p id="orders-count" class="muted"></p>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Order</th>
+                                    <th>Customer / city</th>
+                                    <th>Value</th>
+                                    <th>Score</th>
+                                    <th>Recommendation</th>
+                                    <th>Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-table"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="toolbar pagination">
+                        <button id="previous-page" class="secondary">Previous</button>
+                        <span id="page-number"></span>
+                        <button id="next-page" class="secondary">Next</button>
+                    </div>
+                </section>
+            </section>
+
+            <section id="risk" class="page">
+                <div class="two-column">
+                    <article class="panel">
+                        <h3>City-level historical RTO</h3>
+                        <p class="muted">
+                            Only cities with at least 30 orders. Association, not causation.
+                        </p>
+
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>City</th>
+                                        <th>Orders</th>
+                                        <th>RTO rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="city-table"></tbody>
+                            </table>
+                        </div>
+                    </article>
+
+                    <article class="panel">
+                        <h3>Address-quality signals</h3>
+                        <p class="muted">
+                            Heuristic labels, not verified address deliverability.
+                        </p>
+
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Label</th>
+                                        <th>Orders</th>
+                                        <th>RTO rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="address-table"></tbody>
+                            </table>
+                        </div>
+                    </article>
+                </div>
+
+                <article class="panel">
+                    <h3>Customer RTO history</h3>
+                    <p class="muted">
+                        Order-level groups based on recorded prior RTO count.
+                    </p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Previous RTOs</th>
+                                <th>Orders</th>
+                                <th>Observed RTO rate</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table"></tbody>
+                    </table>
+                </article>
+            </section>
+
+            <section id="whatsapp" class="page">
+                <section class="panel simulator">
+                    <h3>WhatsApp conversation playground</h3>
+
+                    <p class="notice">
+                        Browser demo only. No real WhatsApp messages or payments are sent.
+                    </p>
+
+                    <label>
+                        Flow
+                        <select id="chat-flow">
+                            <option value="CONFIRM_ON_WHATSAPP">Confirm COD order</option>
+                            <option value="NUDGE_PREPAID">Offer prepaid discount</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Demo order value (₹)
+                        <input id="chat-value" type="number" min="1" step="0.01" value="649">
+                    </label>
+
+                    <button id="start-chat">Start / restart demo</button>
+
+                    <div id="chat-messages" class="chat" aria-live="polite"></div>
+
+                    <div class="toolbar">
+                        <input id="chat-reply" aria-label="Customer reply"
+                            placeholder="Customer reply: YES, NO, PAY, COD…">
+                        <button id="send-reply">Send reply</button>
+                    </div>
+
+                    <div class="toolbar">
+                        <button id="chat-timeout" class="secondary">
+                            Simulate 24 hours without reply
+                        </button>
+
+                        <button id="payment-success" class="secondary">
+                            Simulate successful payment
+                        </button>
+                    </div>
+
+                    <p id="chat-state" class="notice">
+                        Start a conversation to test the flow.
+                    </p>
+
+                    <p class="muted">
+                        English demo • 3% illustrative discount • Payment success is simulated.
+                    </p>
+                </section>
+            </section>
+
+            <section id="financials" class="page">
+                <section class="panel">
+                    <h3>Business economics</h3>
+
+                    <p class="notice">
+                        Illustrative estimates only. Actual savings require testing prepaid
+                        conversion, confirmation response and cancellation rates.
+                    </p>
+
+                    <div class="metrics">
+                        <article class="card">
+                            <p>Expected loss per RTO</p>
+                            <h3>₹169.40</h3>
+                        </article>
+
+                        <article class="card">
+                            <p>Illustrative discount on ₹649</p>
+                            <h3>₹19.47</h3>
+                        </article>
+
+                        <article class="card highlight">
+                            <p>Illustrative net impact</p>
+                            <h3 id="illustrative-net-impact">—</h3>
+                            <p class="muted">Estimate only — not a measured result</p>
+                        </article>
+                    </div>
+
+                    <h4>Assumptions to validate</h4>
+
+                    <ul class="explanation">
+                        <li>How many nudged customers actually switch to prepaid?</li>
+                        <li>Does confirmation reduce RTO without losing genuine orders?</li>
+                        <li>How many held orders are eventually cancelled?</li>
+                        <li>What margin, discounts, payment fees and messaging costs apply?</li>
+                    </ul>
+
+                    <p class="muted">
+                        Cancellation losses should use forgone contribution from genuine orders,
+                        not all held orders multiplied by average revenue.
+                    </p>
+                </section>
+            </section>
+
+            <footer>
+                CODGuard AI · Take-home prototype · Historical replay, not production automation
+            </footer>
+        </main>
+    </div>
+</body>
+
+</html>
